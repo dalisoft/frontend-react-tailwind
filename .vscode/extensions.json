@@ -2,6 +2,7 @@
   "recommendations": [
     "oven.bun-vscode",
     "typescriptteam.native-preview",
-    "tekumara.typos-vscode"
+    "tekumara.typos-vscode",
+    "biomejs.biome"
   ]
 }
