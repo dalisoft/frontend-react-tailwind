@@ -26,9 +26,9 @@
     "check-types": "tsgo --noEmit",
     "prepare": "lefthook install -f",
     "start": "bun run --bun server.ts",
-    "dev": "bun --bun vite dev",
-    "build": "bun --bun vite build",
-    "serve": "bun --bun vite preview",
+    "dev": "vite dev",
+    "build": "vite build",
+    "serve": "vite preview",
     "test": "bun test",
     "deploy": "bun run build && wrangler deploy",
     "cf-typegen": "wrangler types"

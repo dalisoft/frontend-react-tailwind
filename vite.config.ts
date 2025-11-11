@@ -11,7 +11,7 @@ const platformTarget = () =>
   [
     process.env.NETLIFY && netlify(),
     // TODO: `nitro` or by default ?
-    process.env.VERCEL_ENV && false,
+    process.env.VERCEL_ENV && nitro({ preset: "bun" }),
     process.env.CLOUDFLARE_ENV &&
       cloudflare({
         viteEnvironment: { name: "client" as "client" | "ssr" },
@@ -42,7 +42,6 @@ const config = defineConfig({
     tailwindcss(),
     tanstackStart(),
     platformTarget(),
-    nitro({ preset: "bun" }),
     viteReact(),
   ],
 });
