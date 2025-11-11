@@ -1,11 +1,11 @@
 {
   "name": "@dalisoft/frontend-react-tailwind",
   "version": "0.0.1",
-  "description": "React.js, Tailwind, Vite and TanStack Start template for easy frontend bootstrap",
+  "description": "React.js, Tailwind, Bun and TanStack Start template for easy frontend bootstrap",
   "keywords": [
     "react",
     "tailwind",
-    "vite",
+    "bunjs",
     "tanstack-start",
     "typescript"
   ],
@@ -22,7 +22,10 @@
   "type": "module",
   "main": "src/App.tsx",
   "scripts": {
-    "test": "bun test"
+    "tsgo": "tsgo",
+    "check-types": "tsgo --noEmit",
+    "test": "bun test",
+    "build": "bun build ./public/index.html --production --outdir=dist"
   },
   "devDependencies": {
     "@typescript/native-preview": "^7.0.0-dev.20251111.1"
