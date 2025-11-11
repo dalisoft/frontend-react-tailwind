@@ -25,13 +25,17 @@
     "tsgo": "tsgo",
     "check-types": "tsgo --noEmit",
     "prepare": "lefthook install -f",
-    "test": "bun test",
+    "start": "bun run --bun server.ts",
     "dev": "bun --bun vite dev",
     "build": "bun --bun vite build",
-    "serve": "bun --bun vite preview"
+    "serve": "bun --bun vite preview",
+    "test": "bun test",
+    "deploy": "bun run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.5",
+    "@cloudflare/vite-plugin": "^1.14.0",
     "@evilmartians/lefthook": "^2.0.3",
     "@ls-lint/ls-lint": "^2.3.1",
     "@tailwindcss/vite": "^4.1.17",
@@ -41,7 +45,8 @@
     "nitro": "^3.0.1-alpha.1",
     "vite": "^7.2.2",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.0.8"
+    "vitest": "^4.0.8",
+    "wrangler": "^4.46.0"
   },
   "dependencies": {
     "@tanstack/react-router": "^1.135.2",
