@@ -29,7 +29,7 @@
     "build": "bun run --bun vite build && cp _redirects ./dist/client/",
     "serve": "bun run --bun vite preview",
     "test": "bun test",
-    "deploy:cf": "bun run build && wrangler deploy",
+    "deploy:cf": "bun run build && wrangler pages deploy",
     "cf-typegen": "wrangler types"
   },
   "devDependencies": {
