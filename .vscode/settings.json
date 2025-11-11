@@ -21,6 +21,6 @@
     "editor.defaultFormatter": "biomejs.biome"
   },
   "npm.packageManager": "bun",
-  "typescript.experimental.useTsgo": true,
+  "typescript.experimental.useTsgo": false,
   "biome.enabled": true
 }

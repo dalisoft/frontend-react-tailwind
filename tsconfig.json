@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "allowJs": false,
     "incremental": true,
@@ -41,10 +41,12 @@
 
     "moduleResolution": "bundler",
     // "baseUrl": "src" ,
-    // "paths": {},
+    "paths": {
+      "@/*": ["./src/*"]
+    },
     // "rootDirs": [],
-    "typeRoots": ["./node_modules/@types"],
-    "types": [],
+    // "typeRoots": ["./node_modules/@types"],
+    "types": ["vite/client", "bun"],
     "allowSyntheticDefaultImports": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false,
@@ -62,6 +64,6 @@
     // "experimentalDecorators": true,
     // "emitDecoratorMetadata": true,
   },
-  "include": ["src", "tests"],
+  "include": ["src", "tests", "vite.config.ts", "nitro.config.ts"],
   "exclude": ["node_modules"]
 }
