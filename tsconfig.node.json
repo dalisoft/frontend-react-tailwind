@@ -3,17 +3,9 @@
   "compilerOptions": {
     "jsx": "preserve",
     "moduleResolution": "NodeNext",
-    "paths": {
-      "@/*": ["./server/api/*"]
-    },
+    "paths": {},
     "types": ["bun"]
   },
-  "include": [
-    "server",
-    "config.ts",
-    "cloud.ts",
-    "vite.config.ts",
-    "nitro.config.ts"
-  ],
+  "include": ["vite.config.ts", "nitro.config.ts"],
   "exclude": ["node_modules"]
 }
