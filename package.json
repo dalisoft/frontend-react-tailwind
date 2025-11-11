@@ -26,9 +26,9 @@
     "check-types": "tsc --noEmit",
     "prepare": "lefthook install -f",
     "start": "bun run --bun server.ts",
-    "dev": "vite dev",
-    "build": "vite build",
-    "serve": "vite preview",
+    "dev": "bun run --bun vite dev",
+    "build": "bun run --bun vite build",
+    "serve": "bun run --bun vite preview",
     "test": "bun test",
     "deploy": "bun run build && wrangler deploy",
     "cf-typegen": "wrangler types"
