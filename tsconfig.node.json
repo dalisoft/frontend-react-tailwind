@@ -4,12 +4,12 @@
     "jsx": "preserve",
     "moduleResolution": "NodeNext",
     "paths": {
-      "@/*": ["./src/api/*"]
+      "@/*": ["./server/api/*"]
     },
     "types": ["bun"]
   },
   "include": [
-    "src/api",
+    "server",
     "config.ts",
     "cloud.ts",
     "vite.config.ts",
