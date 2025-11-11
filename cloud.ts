@@ -22,29 +22,3 @@ export const presets: Record<
     preset: "bun",
   },
 };
-
-export const kv: Record<
-  typeof platform,
-  Parameters<typeof defineConfig>[0]["storage"]
-> = {
-  cloudflare: {
-    kv: {
-      driver: "cloudflare-kv-binding",
-    },
-  },
-  netlify: {
-    kv: {
-      driver: "netlify-blobs",
-    },
-  },
-  vercel: {
-    kv: {
-      driver: "vercel-kv",
-    },
-  },
-  bun: {
-    kv: {
-      driver: "memory",
-    },
-  },
-};
