@@ -19,6 +19,21 @@ const platformTarget = () =>
   ].find((valid) => valid) as Plugin<never>[];
 
 const config = defineConfig({
+  server: {
+    port: Number(process.env.PORT) || 5173,
+  },
+  preview: {
+    port: Number(process.env.PORT) || 5173,
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        advancedChunks: {
+          groups: [{ name: "vendor", test: /\/react(?:-dom)?/ }],
+        },
+      },
+    },
+  },
   plugins: [
     // this is the plugin that enables path aliases
     viteTsConfigPaths({
