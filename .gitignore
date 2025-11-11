@@ -142,3 +142,7 @@ vite.config.ts.timestamp-*
 
 # Mac OSX
 .DS_Store
+
+# LLM
+DRAFTS/*
+!DRAFTS/.gitkeep
