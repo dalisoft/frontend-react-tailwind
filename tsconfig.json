@@ -10,7 +10,6 @@
     "jsx": "react-jsx",
     "declaration": false,
     "declarationMap": false,
-    "sourceMap": true,
     // "outFile": "./",
     // "outDir": "./",
     // "rootDir": "./",

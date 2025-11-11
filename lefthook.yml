@@ -1,0 +1,35 @@
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      env:
+        PATH: $PATH:./node_modules/.bin
+      glob: "*.{js,jsx,ts,tsx,json}"
+      run: biome check "{staged_files}" --write
+    markdown:
+      env:
+        PATH: $PATH:./node_modules/.bin
+      glob: "*.md"
+      run: dprint fmt "{staged_files}"
+
+pre-push:
+  parallel: true
+  commands:
+    biome:
+      env:
+        PATH: $PATH:./node_modules/.bin
+      glob: "*.{js,jsx,ts,tsx,json}"
+      run: biome check "{push_files}"
+    markdown:
+      env:
+        PATH: $PATH:./node_modules/.bin
+      glob: "*.md"
+      run: dprint check "{push_files}"
+    ls-lint:
+      env:
+        PATH: $PATH:./node_modules/.bin
+      run: ls-lint
+    tsc-check:
+      env:
+        PATH: $PATH:./node_modules/.bin
+      run: tsgo --noEmit

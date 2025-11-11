@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.5",
+    "@evilmartians/lefthook": "^2.0.3",
     "@ls-lint/ls-lint": "^2.3.1",
     "@typescript/native-preview": "^7.0.0-dev.20251111.1",
     "dprint": "^0.50.2"
