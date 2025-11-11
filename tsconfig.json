@@ -47,6 +47,7 @@
     "types": [],
     "allowSyntheticDefaultImports": true,
     "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": false,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     // "preserveSymlinks": true,
