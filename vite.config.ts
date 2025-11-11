@@ -1,22 +1,9 @@
-import { cloudflare } from "@cloudflare/vite-plugin";
-import netlify from "@netlify/vite-plugin-tanstack-start";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig } from "vite";
 import viteTsConfigPaths from "vite-tsconfig-paths";
-
-const platformTarget = () =>
-  [
-    process.env.NETLIFY && netlify(),
-    // TODO: `nitro` or by default ?
-    process.env.VERCEL_ENV && nitro({ preset: "bun" }),
-    process.env.CLOUDFLARE_ENV &&
-      cloudflare({
-        viteEnvironment: { name: "ssr" as "client" | "ssr" },
-      }),
-  ].find((valid) => valid) as Plugin<never>[];
 
 const config = defineConfig({
   server: {
@@ -82,7 +69,7 @@ const config = defineConfig({
         host: process.env.DOMAIN_URL,
       },
     }),
-    platformTarget(),
+    nitro(),
     viteReact(),
   ],
 });
