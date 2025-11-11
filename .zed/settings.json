@@ -1,0 +1,9 @@
+{
+  "context_servers": {
+    "context7": {
+      "source": "custom",
+      "command": "bunx",
+      "args": ["--bun", "-y", "@upstash/context7-mcp@latest"]
+    }
+  }
+}
