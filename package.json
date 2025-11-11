@@ -23,5 +23,8 @@
   "main": "src/App.tsx",
   "scripts": {
     "test": "bun test"
+  },
+  "devDependencies": {
+    "@typescript/native-preview": "^7.0.0-dev.20251111.1"
   }
 }
