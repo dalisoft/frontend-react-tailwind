@@ -29,7 +29,7 @@
     "build": "bun run --bun vite build",
     "serve": "bun run --bun vite preview",
     "test": "bun test",
-    "deploy": "bun run build && wrangler deploy",
+    "deploy:cf": "bun run build && wrangler deploy",
     "cf-typegen": "wrangler types"
   },
   "devDependencies": {
