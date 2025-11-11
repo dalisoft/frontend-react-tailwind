@@ -64,6 +64,6 @@
     // "experimentalDecorators": true,
     // "emitDecoratorMetadata": true,
   },
-  "include": ["src", "tests", "server.ts", "vite.config.ts", "nitro.config.ts"],
-  "exclude": ["node_modules"]
+  "include": ["src", "tests"],
+  "exclude": ["node_modules", "src/api"]
 }

@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "moduleResolution": "NodeNext",
+    "paths": {
+      "@/*": ["./src/api/*"]
+    },
+    "types": ["bun"]
+  },
+  "include": [
+    "src/api",
+    "config.ts",
+    "cloud.ts",
+    "vite.config.ts",
+    "nitro.config.ts"
+  ],
+  "exclude": ["node_modules"]
+}
