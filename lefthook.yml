@@ -32,4 +32,4 @@ pre-push:
     tsc-check:
       env:
         PATH: $PATH:./node_modules/.bin
-      run: tsgo --noEmit
+      run: tsc --noEmit

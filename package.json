@@ -22,8 +22,8 @@
   "type": "module",
   "main": "src/root.tsx",
   "scripts": {
-    "tsgo": "tsgo",
-    "check-types": "tsgo --noEmit",
+    "tsgo": "tsc",
+    "check-types": "tsc --noEmit",
     "prepare": "lefthook install -f",
     "start": "bun run --bun server.ts",
     "dev": "vite dev",
