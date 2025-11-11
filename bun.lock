@@ -6,6 +6,7 @@
       "name": "@dalisoft/frontend-react-tailwind",
       "devDependencies": {
         "@biomejs/biome": "^2.3.5",
+        "@ls-lint/ls-lint": "^2.3.1",
         "@typescript/native-preview": "^7.0.0-dev.20251111.1",
       },
     },
@@ -28,6 +29,8 @@
     "@biomejs/cli-win32-arm64": ["@biomejs/cli-win32-arm64@2.3.5", "", { "os": "win32", "cpu": "arm64" }, "sha512-DlBiMlBZZ9eIq4H7RimDSGsYcOtfOIfZOaI5CqsWiSlbTfqbPVfWtCf92wNzx8GNMbu1s7/g3ZZESr6+GwM/SA=="],
 
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.3.5", "", { "os": "win32", "cpu": "x64" }, "sha512-nUmR8gb6yvrKhtRgzwo/gDimPwnO5a4sCydf8ZS2kHIJhEmSmk+STsusr1LHTuM//wXppBawvSQi2xFXJCdgKQ=="],
+
+    "@ls-lint/ls-lint": ["@ls-lint/ls-lint@2.3.1", "", { "os": [ "linux", "win32", "darwin", ], "cpu": [ "x64", "arm64", "s390x", ], "bin": { "ls-lint": "bin/cli.js" } }, "sha512-vPe6IDByQnQRTxcAYjTxrmga/tSIui50VBFTB5KIJWY3OOFmxE2VtymjeSEfQfiMbhZV/ZPAqYy2lt8pZFQ0Rw=="],
 
     "@typescript/native-preview": ["@typescript/native-preview@7.0.0-dev.20251111.1", "", { "optionalDependencies": { "@typescript/native-preview-darwin-arm64": "7.0.0-dev.20251111.1", "@typescript/native-preview-darwin-x64": "7.0.0-dev.20251111.1", "@typescript/native-preview-linux-arm": "7.0.0-dev.20251111.1", "@typescript/native-preview-linux-arm64": "7.0.0-dev.20251111.1", "@typescript/native-preview-linux-x64": "7.0.0-dev.20251111.1", "@typescript/native-preview-win32-arm64": "7.0.0-dev.20251111.1", "@typescript/native-preview-win32-x64": "7.0.0-dev.20251111.1" }, "bin": { "tsgo": "bin/tsgo.js" } }, "sha512-IWafo9qVR7sEl/59AYoy7XTkC+rH62QaIKp7PuMYYcNwqjNlFKszGeJtXadqBpyY61lVhtb3xoZ6otsNotAgMg=="],
 
