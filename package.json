@@ -1,0 +1,27 @@
+{
+  "name": "@dalisoft/frontend-react-tailwind",
+  "version": "0.0.1",
+  "description": "React.js, Tailwind, Vite and TanStack Start template for easy frontend bootstrap",
+  "keywords": [
+    "react",
+    "tailwind",
+    "vite",
+    "tanstack-start",
+    "typescript"
+  ],
+  "homepage": "https://github.com/dalisoft/frontend-react-tailwind#readme",
+  "bugs": {
+    "url": "https://github.com/dalisoft/frontend-react-tailwind/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/dalisoft/frontend-react-tailwind.git"
+  },
+  "license": "MIT",
+  "author": "Davlatjon Shavkatov <opensource@dalisoft.uz>",
+  "type": "module",
+  "main": "src/App.tsx",
+  "scripts": {
+    "test": "bun test"
+  }
+}
