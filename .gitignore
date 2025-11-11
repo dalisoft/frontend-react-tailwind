@@ -146,3 +146,6 @@ vite.config.ts.timestamp-*
 # LLM
 DRAFTS/*
 !DRAFTS/.gitkeep
+
+# TanStack ignores
+src/routeTree.gen.ts
