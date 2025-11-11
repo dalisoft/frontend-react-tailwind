@@ -20,7 +20,7 @@
   "license": "MIT",
   "author": "Davlatjon Shavkatov <opensource@dalisoft.uz>",
   "type": "module",
-  "main": "src/App.tsx",
+  "main": "src/root.tsx",
   "scripts": {
     "tsgo": "tsgo",
     "check-types": "tsgo --noEmit",
@@ -40,6 +40,9 @@
     "@ls-lint/ls-lint": "^2.3.1",
     "@netlify/vite-plugin-tanstack-start": "^1.1.12",
     "@tailwindcss/vite": "^4.1.17",
+    "@types/bun": "^1.3.2",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "~19.2.2",
     "@typescript/native-preview": "^7.0.0-dev.20251111.1",
     "@vitejs/plugin-react": "^5.1.0",
     "dprint": "^0.50.2",
