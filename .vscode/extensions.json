@@ -3,6 +3,13 @@
     "oven.bun-vscode",
     "typescriptteam.native-preview",
     "tekumara.typos-vscode",
-    "biomejs.biome"
+    "biomejs.biome",
+    "davidanson.vscode-markdownlint",
+    "bierner.markdown-mermaid",
+    "bierner.markdown-checkbox",
+    "bierner.markdown-emoji",
+    "bierner.markdown-footnotes",
+    "bierner.markdown-yaml-preamble",
+    "goessner.mdmath"
   ]
 }
