@@ -5,5 +5,5 @@
   "devCommand": "bun run dev",
   "buildCommand": "bun run build",
   "framework": "tanstack-start",
-  "outputDirectory": "dist/client"
+  "outputDirectory": "dist"
 }

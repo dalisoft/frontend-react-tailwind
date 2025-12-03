@@ -1,18 +1,43 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+
+const filePath = path.resolve(import.meta.dirname, "count.txt");
+
+async function readCount() {
+  return parseInt(await fs.readFile(filePath, "utf-8").catch(() => "0"), 10);
+}
+
+const getCount = createServerFn({
+  method: "GET",
+}).handler(() => {
+  return readCount();
+});
+
+const updateCount = createServerFn({ method: "POST" })
+  .inputValidator((d: number) => d)
+  .handler(async ({ data }) => {
+    const count = await readCount();
+    await fs.writeFile(filePath, `${count + data}`);
+  });
 
 export const Route = createFileRoute("/")({
   component: Home,
+  loader: async () => await getCount(),
 });
 
 function Home() {
-  const [state, setState] = useState(0);
+  const router = useRouter();
+  const state = Route.useLoaderData();
 
   return (
     <button
       type="button"
       onClick={() => {
-        setState(state + 1);
+        updateCount({ data: 1 }).then(() => {
+          router.invalidate();
+        });
       }}
     >
       Add 1 to {state}?
