@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "context7": {
+      "type": "stdio",
+      "command": "bun",
+      "args": ["x", "--bun", "@upstash/context7-mcp@latest"]
+    }
+  }
+}
