@@ -1,9 +1,8 @@
 {
   "mcpServers": {
     "context7": {
-      "type": "stdio",
-      "command": "bunx",
-      "args": ["--bun", "-y", "@upstash/context7-mcp@latest"],
+      "type": "streamable-http",
+      "url": "https://mcp.context7.com/mcp",
       "alwaysAllow": ["get-library-docs", "resolve-library-id"]
     }
   }
