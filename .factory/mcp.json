@@ -1,9 +1,9 @@
 {
   "mcpServers": {
     "context7": {
-      "type": "stdio",
-      "command": "bun",
-      "args": ["x", "--bun", "@upstash/context7-mcp@latest"]
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "disabled": false
     }
   }
 }
