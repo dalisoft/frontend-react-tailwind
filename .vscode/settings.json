@@ -36,30 +36,50 @@
   "claudeCode.initialPermissionMode": "plan",
   "claudeCode.selectedModel": "opusplan",
   "claudeCode.useTerminal": true,
-  "claudeCode.environmentVariables": [
-    { "name": "ANTHROPIC_BASE_URL", "value": "http://127.0.0.1:8317" },
-    { "name": "ANTHROPIC_AUTH_TOKEN", "value": "sk-dummy" },
-    /* version 2.x.x */
-    {
-      "name": "ANTHROPIC_DEFAULT_OPUS_MODEL",
-      "value": "claude-opus-4-5-20251101"
-    },
-    {
-      "name": "ANTHROPIC_DEFAULT_SONNET_MODEL",
-      "value": "glm-4.7"
-    },
-    {
-      "name": "ANTHROPIC_DEFAULT_HAIKU_MODEL",
-      "value": "claude-haiku-4-5-20251001"
-    },
-    {
-      "name": "ANTHROPIC_MODEL",
-      "value": "opusplan"
-    },
-    { "name": "CLAUDE_CODE_SUBAGENT_MODEL", "value": "glm-4.7" },
-    {
-      "name": "API_TIMEOUT_MS",
-      "value": "3000000"
-    }
+  "kilo-code.allowedCommands": [
+    "ls",
+    "ls -la",
+    "git status",
+    "git diff",
+    "git log",
+    "git show",
+    "bun install",
+    "bun test",
+    "bun run"
+  ],
+  "kilo-code.deniedCommands": [
+    "git add",
+    "git commit",
+    "git push",
+    "git fetch",
+    "git pull",
+    "git clone",
+    "git checkout",
+    "git switch",
+    "git reset",
+    "git clean",
+    "git merge",
+    "git rebase",
+    "git tag",
+    "git submodule",
+    "git remote",
+    "git config",
+
+    "bunx",
+    "bun add",
+    "bun remove",
+    "bun link",
+    "bun upgrade",
+
+    "rm",
+    "mv",
+    "chmod",
+    "chown",
+    "sudo",
+    "mkfs",
+    "reboot",
+    "poweroff",
+    "halt",
+    "xargs"
   ]
 }
