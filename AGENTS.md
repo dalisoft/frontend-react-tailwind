@@ -15,7 +15,6 @@ Precedence: `PROJECT.md` > `ARCHITECTURE.md` > `AGENTS.md`
 ## Safety protocol
 
 - Allowed actions (approval not required):
-
   - Read
   - Search
   - Analyze
@@ -23,22 +22,40 @@ Precedence: `PROJECT.md` > `ARCHITECTURE.md` > `AGENTS.md`
   - Web search tools
 
 - Allowed commands (approval not required):
-
   - `grep`, `glob`, `ls`
   - Dry-run commands
   - Check-only tasks: `check-types`, `lint`, `test`, `build`
   - Project-wise Git-tracked local edits
 
-- Needs approval (CI risks):
+- Needs approval (CI / state-change risks):
+  - Git operations that modify repo state (e.g. `git add`, `git commit`, `git push`, `git reset`, `git checkout`, `git merge`, `git rebase`)
+  - Dependency graph mutations (`bun install`, `bun add/remove/upgrade`, lockfile changes)
+  - Commands that modify tracked files outside Allowed paths
+  - Migrations, codegen that writes tracked files, or any destructive ops
 
-  - Git operations (e.g. `git add`, `git commit`, `git push`, `git reset`)
-  - Execute operations
-  - Modify configs, install packages, run migrations
+- Allowed commands (approval not required):
+  - Read-only git: `git status`, `git diff`, `git log`, `git show`, `git blame`
+  - Check-only tasks: `check-types`, `lint`, `test`, `build`
 
 - Never allowed commands:
-
   - Unsafe and danger commands (e.g. `sudo`, `sudo su`, `sudo rm -rf /`)
   - Unverified binary or shell executable
+
+## Security Guardrails
+
+- Do not read `.env*` files as an agent.
+- When running **Bun** commands as an agent, default to `--no-env-file` to prevent automatic `.env` loading.
+  - Only allow env-file loading when the task explicitly requires it and approval is granted.
+- `bun install`, `bun add/remove/upgrade`, and any dependency graph mutation require explicit approval.
+- If you must allow install in an agent workflow, use `bun install --frozen-lockfile --ignore-scripts`.
+- Never modify VS Code settings, AI settings, allowlists, denylists, or any files under `.vscode` or `~/.config`.
+- Never run denied commands that change repo state or project state.
+- Prefer file **tools** (`read_file`/`search_files`/`apply_diff`/`write_to_file`) over terminal commands for file inspection and edits.
+- **No chaining** in terminal commands (`;`, `&&`, `||`, `|`, `$()`, etc.).
+- **No redirects/heredocs** in terminal commands when running as an agent; use file tools for writes.
+- Run checks as separate commands.
+- Do not use find with `-exec`/`-execdir`/`-ok`/`-delete`.
+- If a task requires anything outside these rules, stop and ask the user for explicit confirmation.
 
 ## Operating principles
 
@@ -73,17 +90,19 @@ TASK:
 Always:
 
 - Read local context: `ARCHITECTURE.md`, `PROJECT.md`, `DRAFTS/*.md` if present.
+- use file tools to read these if present.
 - Review recent history for files you’ll edit:
-
   - `git log -n 3 --pretty=format:"%h %ad %an %s" --date=short -- <path>`
   - `git show <hash> -- <path>` as needed
   - `git blame -L <start>,<end> -- <path>` if touching tricky lines
 
 Sometimes (only if needed):
 
-- Snapshot env: `cat package.json tsconfig.json 2>/dev/null || true`
+- Snapshot env: read `package.json` and `tsconfig.json` via file tools if they exist.
 
 ### Plan (minimal, executable, with fallback)
+
+#### Fast loop (pre-PR)
 
 ```yaml
 PLAN:
@@ -94,24 +113,38 @@ PLAN:
     - "Small diff in allowed paths (list exact files)"
     - "Re-run checks; collect proof"
   commands:
-    - "bun install"
-    - "bun run check-types && bun run lint && bun run test"
+    - bun install --frozen-lockfile
+    - bun run check-types
+    - bun run lint # Targeted tests only
+    - bun run test
 ```
 
-Rules: prefer small diffs; dry runs first when available; `set -euo pipefail` and `&&` chains.
+#### Full loop (DoD)
+
+```yaml
+PLAN:
+  approach: "<primary strategy>"
+  fallback: "<alternative if primary fails>"
+  steps:
+    - "Baseline checks: types, lint, unit"
+    - "Small diff in allowed paths (list exact files)"
+    - "Re-run checks; collect proof"
+  commands:
+    - bun install --frozen-lockfile
+    - bun run check-types
+    - bun run lint # Full test suite
+    - bun run test
+    - bun run build
+```
+
+Rules: prefer small diffs; dry runs first when available; `set -euo pipefail` and safeguards.
 
 ### Execute (deterministic edits)
 
 - Stay inside Allowed paths. No destructive ops without approval.
 - Never touch `.env*`, `.git*`, secrets, or prod data.
 - ESM only (no CommonJS).
-- Create files deterministically:
-
-```bash
-mkdir -p path/to && cat <<'EOF' > path/to/file.ts
-// content
-EOF
-```
+- Create/modify files via file tools (`write_to_file` / `apply_diff`) to avoid shell redirections and ensure deterministic diffs.
 
 ### Verify (all applicable checks)
 
@@ -155,7 +188,8 @@ Project `package.json` MUST expose scripts:
 
 Default to Bun instead of Node.js.
 
-- Install deps: `bun install`
+- Initial deps installation: `bun install --frozen-lockfile`
+- Install new deps: `bun install`
 - Type check: `bun run check-types`
 - Lint & format: `bun run lint` (auto-fix: add `--write`)
 - Unit/integration tests: `bun run test`
@@ -166,15 +200,19 @@ Default to Bun instead of Node.js.
 - Run file: `bun <file>`
 - Run script: `bun run <script>`
 
-> Bun auto-loads `.env` -> do NOT add `dotenv`
+Also follow below requirements:
+
+- Bun can auto-load `.env` files by default; in agent-mode prefer `--no-env-file` unless explicitly needed.
+- In agent workflows, default to `bun run --no-env-file` unless the task explicitly requires env-file loading and approval is granted.
+- Install new deps: if deps already installed, skip; otherwise request approval to run `bun install`.
 
 ### Fallback commands
 
 When scripts are missing and you cannot add them
 
-- Typecheck (preferred): `bunx tsgo -p tsconfig.json --noEmit`
-  - Fallback (if `tsgo` unavailable): `bunx tsc -p tsconfig.json --noEmit`
-- Lint/format: `bunx @biomejs/biome check .` (auto-fix: add `--write`)
+- Typecheck (preferred): `bunx --no-install tsgo -p tsconfig.json --noEmit`
+  - Fallback (if `tsgo` unavailable): `bunx --no-install tsc -p tsconfig.json --noEmit`
+- Lint/format: `bunx --no-install @biomejs/biome check .` (auto-fix: add `--write`)
 - Unit/integration tests: `bunx vitest run`
 - E2E/visual: `bunx playwright test`
 - Benchmark: `bunx vitest bench`
@@ -199,9 +237,9 @@ When scripts are missing and you cannot add them
 Defaults; Projects may override in `PROJECT.md`.
 
 - Allowed:
-
   - `src/`
   - `tests/`
+  - `DRAFTS/`
   - `tailwind.config.js`
   - `vite.config.js`
   - `package.json` (scripts & devDeps only)
@@ -210,7 +248,6 @@ Defaults; Projects may override in `PROJECT.md`.
   - `playwright.config.*`
 
 - Needs approval (CI risks):
-
   - `.github/workflows/`
 
 - Never:
