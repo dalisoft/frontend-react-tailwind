@@ -1,6 +1,6 @@
 # ARCHITECTURE
 
-Canonical system shape for React + Tailwind apps. Update only when responsibilities change.
+Canonical responsibilities for React + Tailwind apps. Update only when responsibilities change.
 
 ## Safety protocol
 
@@ -23,6 +23,8 @@ Refer to `AGENTS.md` for safety protocol
 - New runtime dependencies require PR justification (need, size, alternatives).
 
 ## Directory layout
+
+The tree below is illustrative; the authoritative rule is module responsibility boundaries.
 
 ```tree
 .
@@ -52,7 +54,7 @@ Refer to `AGENTS.md` for safety protocol
 ├── vite.config.js                     # Vite config (if used)
 ├── playwright.config.ts               # Playwright config (if used)
 ├── scripts                            # Common scripts for automation/build/export (if defined in `PROJECT.md` or project files)
-│   ├── build.sh                       # Build automation script (e.g., Vite production build)
+│   ├── build.sh                       # Build automation script (e.g., Vite production build); do not edit via agents unless asked by user
 │   ├── export.ts                      # Example export utility script
 │   └── etc                            # Placeholder for additional script files
 ├── src                                # Main source directory
@@ -86,7 +88,6 @@ Refer to `AGENTS.md` for safety protocol
 │   ├── pages                          # Pages directory
 │   │   └── Home                       # Example page directory (main page?!)
 │   │       ├── Home.tsx               # Home page implementation
-│   │       ├── Home.test.tsx               # Home page implementation
 │   │       ├── index.ts               # Barrel export file
 │   │       └── Home.test.tsx          # Unit test for Home page
 │   ├── types                          # Source-scoped reusable types (used internally in src)
@@ -188,10 +189,10 @@ Use imports like `import { foo } from "@/utils/foo"` to avoid brittle relative p
 
 ## Testing
 
-- [Unit/integration](#dependency-overview) (`bun run test`; `import { describe, it, expect } from 'vitest'`)
+- [Unit/integration](#dependency-overview) (`bun run test`; use Vitest APIs: `import { describe, it, expect } from 'vitest'`)
 - [E2E & visuals](#dependency-overview):
   - Visual goldens: `tests/e2e/__screenshots__/`
-  - `expect(page).toHaveScreenshot({ threshold: 0.2 })` unless overridden in `PROJECT.md`
+  - Stabilize screenshots: prefer config-level defaults (`expect.toHaveScreenshot`), and use style injection to hide volatile elements when needed unless overridden in `PROJECT.md`
   - Update snapshots only for intentional visual changes and include diffs in proof
   - Snapshots in `tests/e2e/__screenshots__/`
 
