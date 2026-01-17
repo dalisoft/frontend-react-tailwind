@@ -2,6 +2,18 @@
 
 Scooter App: Figma → React + Tailwind
 
+## Overrides (this file wins)
+
+### Allowed paths (additions)
+
+- `figma-assets.manifest.json`
+- `DRAFTS/` (if used for work tracking)
+
+### Secrets / tokens
+
+- Prefer Figma MCP tools for asset export.
+- REST API fallback requires explicit human-provided token via environment (not by reading `/.env.mcp`).
+
 ## Task
 
 Convert Figma designs to React (TypeScript) + Tailwind CSS.
@@ -19,19 +31,19 @@ Project `package.json` MUST expose scripts:
 
 Default to Bun instead of Node.js.
 
-- Figma assets: `bun run figma:export` (dry: `DRY_RUN=1 bun run figma:export`)
+- Figma assets export: `bun run figma:export` (dry: `bun run figma:export:dry`)
 
 ## Design source
 
 Figma file: "Веб-инвест макеты" (title: "веб инвест")
 
-- Mobile: "Макеты моб" (node-id `13-996`)
-- Desktop: "Макеты ПК" (node-id `13-995`)
+- Mobile: "Макеты моб" (node-id `13:996`)
+- Desktop: "Макеты ПК" (node-id `13:995`)
 
 Access:
 
 - Primary: `figma` MCP tools
-- Fallback: Figma REST API (token in `/.env.mcp`)
+- Fallback: Figma REST API (token must be provided explicitly via environment by a human; agents must not read `.env*`)
 
 - Exclude: iPhone wireframe (presentation only)
 
@@ -79,7 +91,9 @@ Formats: SVG, PNG, WebP (multi-scale, optional Sharp conversion)
 ```bash
 # 1. Baseline
 bun install
-bun run check-types && bun run lint && bun run test
+bun run check-types
+bun run lint
+bun run test
 
 # 2. Tokens
 # Extract via MCP → update tailwind.config.js
@@ -93,8 +107,9 @@ bun run figma:export
 
 # 5. Verify
 bun run test
-bun run build && bun run preview
-bunx run e2e-test  # If UI changed
+bun run build
+bun run preview
+bun run e2e-test  # If UI changed
 ```
 
 ## Definition of Done
@@ -112,5 +127,5 @@ Default: `threshold: 0.2` for Playwright screenshots
 
 ## Risks
 
-- MCP unavailable → use REST fallback with `.env.mcp`
-- Asset export fails → check token/permissions, try dry run
+- MCP unavailable → use REST fallback with `.env.mcp` with a token explicitly provided via environment by a human (agents must not read `.env*`)
+- Asset export fails → check token/permissions, run `bun run figma:export:dry` to verify, then retry export
