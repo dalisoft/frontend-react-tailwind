@@ -77,9 +77,9 @@ The tree below is illustrative; the authoritative rule is module responsibility 
 │   │   └── index.ts                   # Barrel export for all contexts
 │   ├── helpers                        # Helpers directory
 │   │   ├── formatDate.ts              # Example date formatting helper
-│   │   ├── formatDate.test.ts              # Example date formatting helper
+│   │   ├── formatDate.test.ts         # Example date formatting helper
 │   │   ├── calculateTotal.ts          # Example calculation helper
-│   │   ├── calculateTotal.test.ts          # Example calculation helper
+│   │   ├── calculateTotal.test.ts     # Example calculation helper
 │   │   └── index.ts                   # Barrel export for helpers
 │   ├── hooks                          # Commonly used React hooks directory
 │   │   ├── useAuth.ts                 # Custom hook for authentication (login, logout, token, etc.)
@@ -189,12 +189,16 @@ Use imports like `import { foo } from "@/utils/foo"` to avoid brittle relative p
 
 ## Testing
 
-- [Unit/integration](#dependency-overview) (`bun run test`; use Vitest APIs: `import { describe, it, expect } from 'vitest'`)
-- [E2E & visuals](#dependency-overview):
-  - Visual goldens: `tests/e2e/__screenshots__/`
-  - Stabilize screenshots: prefer config-level defaults (`expect.toHaveScreenshot`), and use style injection to hide volatile elements when needed unless overridden in `PROJECT.md`
-  - Update snapshots only for intentional visual changes and include diffs in proof
-  - Snapshots in `tests/e2e/__screenshots__/`
+Follow `PROJECT.md` for the chosen [unit test runner](#dependency-overview).
+
+Just run `bun run test` script to ensure all tests are pass.
+
+[E2E & visuals](#dependency-overview):
+
+- Visual goldens: `tests/e2e/__screenshots__/`
+- Stabilize screenshots: prefer config-level defaults (`expect.toHaveScreenshot`), and use style injection to hide volatile elements when needed unless overridden in `PROJECT.md`
+- Update snapshots only for intentional visual changes and include diffs in proof
+- Snapshots in `tests/e2e/__screenshots__/`
 
 ## CI & gates
 

@@ -33,6 +33,14 @@ Default to Bun instead of Node.js.
 
 - Figma assets export: `bun run figma:export` (dry: `bun run figma:export:dry`)
 
+## Testing framework (project override)
+
+This project uses **Vitest** for unit/integration tests.
+
+- Unit tests should use Vitest APIs (e.g. `import { describe, it, expect } from 'vitest'`)
+- `bun run test` must execute Vitest (via package.json script)
+- Benchmarking (if used) uses Vitest bench
+
 ## Design source
 
 Figma file: "Веб-инвест макеты" (title: "веб инвест")
@@ -90,6 +98,7 @@ Formats: SVG, PNG, WebP (multi-scale, optional Sharp conversion)
 
 ```bash
 # 1. Baseline
+# bun install requires explicit approval in agent workflows
 bun install
 bun run check-types
 bun run lint

@@ -14,6 +14,10 @@ Precedence: `PROJECT.md` > `ARCHITECTURE.md` > `AGENTS.md`
 
 ## Safety protocol
 
+### What counts as approval
+
+Approval must be explicit in the conversation. If an action is listed as "Needs approval", do not perform it unless the user clearly approves it.
+
 - Allowed actions (approval not required):
   - Read
   - Search
@@ -25,19 +29,17 @@ Precedence: `PROJECT.md` > `ARCHITECTURE.md` > `AGENTS.md`
   - `grep`, `glob`, `ls`
   - Dry-run commands
   - Check-only tasks: `check-types`, `lint`, `test`, `build`
-  - Project-wise Git-tracked local edits
+  - Read-only git: `git status`, `git diff`, `git log`, `git show`, `git blame`
+  - Project-wise Git-tracked local edits (only within Allowed paths)
 
 - Needs approval (CI / state-change risks):
-  - Git operations that modify repo state (e.g. `git add`, `git commit`, `git push`, `git reset`, `git checkout`, `git merge`, `git rebase`)
+  - Git operations that modify repo local state (e.g. `git add`, `git reset`, `git checkout`)
   - Dependency graph mutations (`bun install`, `bun add/remove/upgrade`, lockfile changes)
   - Commands that modify tracked files outside Allowed paths
   - Migrations, codegen that writes tracked files, or any destructive ops
 
-- Allowed commands (approval not required):
-  - Read-only git: `git status`, `git diff`, `git log`, `git show`, `git blame`
-  - Check-only tasks: `check-types`, `lint`, `test`, `build`
-
 - Never allowed commands:
+  - Git operations that modify repo remote state (e.g. `git commit`, `git push`, `git merge`, `git rebase`)
   - Unsafe and danger commands (e.g. `sudo`, `sudo su`, `sudo rm -rf /`)
   - Unverified binary or shell executable
 
@@ -51,9 +53,10 @@ Precedence: `PROJECT.md` > `ARCHITECTURE.md` > `AGENTS.md`
 - Never modify VS Code settings, AI settings, allowlists, denylists, or any files under `.vscode` or `~/.config`.
 - Never run denied commands that change repo state or project state.
 - Prefer file **tools** (`read_file`/`search_files`/`apply_diff`/`write_to_file`) over terminal commands for file inspection and edits.
-- **No chaining** in terminal commands (`;`, `&&`, `||`, `|`, `$()`, etc.).
+- **No chaining** in terminal commands (`;`, `&&`, `||`).
+- Pipes (`|`) are allowed only for read-only inspection (e.g. `git diff | head -n 50`).
 - **No redirects/heredocs** in terminal commands when running as an agent; use file tools for writes.
-- Run checks as separate commands.
+- Run commands separately for deterministic logs.
 - Do not use find with `-exec`/`-execdir`/`-ok`/`-delete`.
 - If a task requires anything outside these rules, stop and ask the user for explicit confirmation.
 
@@ -113,10 +116,11 @@ PLAN:
     - "Small diff in allowed paths (list exact files)"
     - "Re-run checks; collect proof"
   commands:
-    - bun install --frozen-lockfile
-    - bun run check-types
-    - bun run lint # Targeted tests only
-    - bun run test
+    # Requires approval if deps are not already installed / cache not present:
+    - bun install --frozen-lockfile --ignore-scripts
+    - bun run --no-env-file check-types
+    - bun run --no-env-file lint # Targeted tests only
+    - bun run --no-env-file test
 ```
 
 #### Full loop (DoD)
@@ -130,14 +134,15 @@ PLAN:
     - "Small diff in allowed paths (list exact files)"
     - "Re-run checks; collect proof"
   commands:
-    - bun install --frozen-lockfile
-    - bun run check-types
-    - bun run lint # Full test suite
-    - bun run test
-    - bun run build
+    # Requires approval if deps are not already installed / cache not present:
+    - bun install --frozen-lockfile --ignore-scripts
+    - bun run --no-env-file check-types
+    - bun run --no-env-file lint # Full test suite
+    - bun run --no-env-file test
+    - bun run --no-env-file build
 ```
 
-Rules: prefer small diffs; dry runs first when available; `set -euo pipefail` and safeguards.
+Rules: prefer small diffs; dry runs first when available; safeguard destructive operations.
 
 ### Execute (deterministic edits)
 
@@ -170,6 +175,13 @@ PROOF:
   intent: "What/why/where; known tradeoffs"
 ```
 
+## Test runner policy (important)
+
+- Default recommendation: Bun’s built-in test runner (`bun test` and imports from `bun:test`) for speed and fewer dependencies.
+- Project override: if `PROJECT.md` specifies Vitest (or another runner), follow it:
+  - use that runner’s import APIs in tests
+  - ensure `bun run test` (package.json) executes the configured runner
+
 ## Core commands
 
 Defaults; Projects may override in `PROJECT.md`.
@@ -188,8 +200,8 @@ Project `package.json` MUST expose scripts:
 
 Default to Bun instead of Node.js.
 
-- Initial deps installation: `bun install --frozen-lockfile`
-- Install new deps: `bun install`
+- Initial deps installation (requires approval): `bun install --frozen-lockfile --ignore-scripts`
+- Install new deps (requires approval): `bun install`
 - Type check: `bun run check-types`
 - Lint & format: `bun run lint` (auto-fix: add `--write`)
 - Unit/integration tests: `bun run test`
@@ -198,7 +210,6 @@ Default to Bun instead of Node.js.
 - Build: `bun run build`
 - Preview: `bun run preview`
 - Run file: `bun <file>`
-- Run script: `bun run <script>`
 
 Also follow below requirements:
 
@@ -212,10 +223,14 @@ When scripts are missing and you cannot add them
 
 - Typecheck (preferred): `bunx --no-install tsgo -p tsconfig.json --noEmit`
   - Fallback (if `tsgo` unavailable): `bunx --no-install tsc -p tsconfig.json --noEmit`
+
 - Lint/format: `bunx --no-install @biomejs/biome check .` (auto-fix: add `--write`)
-- Unit/integration tests: `bunx vitest run`
-- E2E/visual: `bunx playwright test`
-- Benchmark: `bunx vitest bench`
+- Unit/integration tests:
+  - If PROJECT uses `bun:test`: `bun test`
+  - If PROJECT uses Vitest: `bunx --no-install vitest run`
+- E2E/visual: `bunx --no-install playwright test`
+- Benchmark:
+  - If PROJECT uses Vitest: `bunx --no-install vitest bench`
 
 ## Definition of Done (DoD)
 
@@ -287,7 +302,8 @@ Defaults; Projects may override in `PROJECT.md`.
 Defaults; Projects may override in `PROJECT.md`.
 
 - Unit/integration (`bun run test`)
-  - Example: `import { describe, it, expect } from 'bun:test'`
+  - If using bun:test: `import { describe, it, expect } from 'bun:test'`
+  - If using Vitest (project-defined): `import { describe, it, expect } from 'vitest'`
 
 ## CI gates (required)
 
