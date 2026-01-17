@@ -31,7 +31,13 @@ Project `package.json` MUST expose scripts:
 
 Default to Bun instead of Node.js.
 
-- Figma assets export: `bun run figma:export` (dry: `bun run figma:export:dry`)
+- Figma assets export: `bun run --no-env-file figma:export` (dry: `bun run --no-env-file figma:export:dry`)
+  - `figma:export` is bulk-writing → approval-gated unless explicitly requested.
+
+## Security Guardrails
+
+- Follow `AGENTS.md` and `ARCHITECTURE.md` for all environment/secrets rules (including `--no-env-file`, approval gating, and “never read .env\*”).
+- This file only adds project-specific command expectations (e.g., `figma:export`, `figma:export:dry`) and architectural boundaries.
 
 ## Testing framework (project override)
 
@@ -74,8 +80,36 @@ Access:
 ## API Integration
 
 - TanStack React Query for all data
-- Centralized fetcher in `src/utils/fetcher.ts`
+- Centralized API fetcher defined at [ARCHITECTURE](./ARCHITECTURE.md)
 - No fetch in components
+
+## Data & flow
+
+### React Query conventions (required)
+
+#### QueryClient ownership
+
+- The app must create a single `QueryClient` instance in one place (e.g., `src/app/queryClient.ts` or `src/main.tsx`) and provide it via `QueryClientProvider`.
+- Do not create per-page QueryClients.
+
+#### Query key conventions
+
+- Use stable, serializable keys:
+  - `['resource']`
+  - `['resource', { ...params }]`
+- Do not embed functions, class instances, Dates, or non-serializable values in query keys.
+
+#### Defaults (recommended)
+
+- Prefer conservative retries:
+  - Queries (GET): retry a small number of times for transient failures.
+  - Mutations (non-idempotent): no/low retry unless explicitly safe.
+- Set `staleTime` intentionally for each domain to avoid refetch thrash.
+
+#### Error normalization contract
+
+- All network errors must be normalized by the centralized API fetcher into a consistent shape.
+- API hooks should expose `{ data, error, isLoading }` and must not leak raw `fetch`/`Response` objects to UI.
 
 ## Assets
 
@@ -86,40 +120,13 @@ Access:
 # MCP tools export to src/assets/ and update manifest
 
 # Via script (automated)
-bun run figma:export          # Export all
-bun run figma:export:dry      # Preview only
+bun run --no-env-file figma:export          # Export all
+bun run --no-env-file figma:export:dry      # Preview only
 ```
 
 Assets: Icons, images, logo, backgrounds → `src/assets/`
 Manifest: `figma-assets.manifest.json` maps nodes → paths
 Formats: SVG, PNG, WebP (multi-scale, optional Sharp conversion)
-
-## Execution checklist
-
-```bash
-# 1. Baseline
-# bun install requires explicit approval in agent workflows
-bun install
-bun run check-types
-bun run lint
-bun run test
-
-# 2. Tokens
-# Extract via MCP → update tailwind.config.js
-
-# 3. Assets
-bun run figma:export:dry
-bun run figma:export
-
-# 4. Implement
-# Mobile-first, then desktop variants
-
-# 5. Verify
-bun run test
-bun run build
-bun run preview
-bun run e2e-test  # If UI changed
-```
 
 ## Definition of Done
 

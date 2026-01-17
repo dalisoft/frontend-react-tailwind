@@ -14,9 +14,47 @@ Precedence: `PROJECT.md` > `ARCHITECTURE.md` > `AGENTS.md`
 
 ## Safety protocol
 
+### Stop conditions (ask instead of guessing)
+
+Stop and ask the user for explicit clarification/approval if any of the following is true:
+
+#### Missing required inputs
+
+- A task depends on credentials, tokens, URLs, API base URLs, project IDs, node IDs, or external access that is not already present in the repo or conversation.
+- The task requires environment variables but the required keys/values are not provided (do not read `.env*`).
+- A command/script is known or suspected to auto-load secrets (env files, credential helpers) unless `--no-env-file` (or equivalent) is used.
+
+#### Approval ambiguity / policy boundary
+
+- The next step is approval-gated but user approval is not explicit.
+- You’re unsure whether an action is approval-gated (treat uncertainty as approval-gated).
+
+#### Bulk-writing / large diff risk
+
+- Running a script/command likely writes many files or produces a large diff (asset export, codegen, snapshot updates, codemods).
+- The task is likely to change generated artifacts, binaries, or files outside normal review scope.
+- The task involves updating snapshots/goldens (Playwright/Vitest/etc.) unless the user explicitly requested snapshot updates.
+
+#### Allowed-path boundary
+
+- Any change would touch paths outside Allowed paths.
+- A tool or command would write into unknown locations (e.g., unclear output directory, “export” commands without a configured target).
+
+#### Destructive / irreversible / hard-to-revert actions
+
+- Migrations against real environments, schema changes, data backfills, or destructive operations of any kind.
+- Any command that could delete/overwrite data or remove files in bulk.
+
+#### Unbounded investigation / time sink
+
+- The repo structure, scripts, or requirements are unclear enough that you would need to “try things” (multiple speculative runs) to discover what works.
+- You cannot define a minimal plan with objective success signals after initial exploration.
+
 ### What counts as approval
 
 Approval must be explicit in the conversation. If an action is listed as "Needs approval", do not perform it unless the user clearly approves it.
+
+Allowed commands only when operating on files within repo root.
 
 - Allowed actions (approval not required):
   - Read
@@ -26,28 +64,35 @@ Approval must be explicit in the conversation. If an action is listed as "Needs 
   - Web search tools
 
 - Allowed commands (approval not required):
-  - `grep`, `glob`, `ls`
-  - Dry-run commands
+  - `grep`, `head`, `tail`, `cat`, `ls` (shell globs allowed for read-only inspection commands).
+  - Dry-run commands.
   - Check-only tasks: `check-types`, `lint`, `test`, `build`
-  - Read-only git: `git status`, `git diff`, `git log`, `git show`, `git blame`
-  - Project-wise Git-tracked local edits (only within Allowed paths)
+    - Default with `--no-env-file`; reruns without it are approval-gated if env is required.
+  - Read-only git: `git status`, `git diff`, `git log`, `git show`, `git blame`.
+  - Local workspace folder file edits (only within Allowed paths).
 
 - Needs approval (CI / state-change risks):
-  - Git operations that modify repo local state (e.g. `git add`, `git reset`, `git checkout`)
-  - Dependency graph mutations (`bun install`, `bun add/remove/upgrade`, lockfile changes)
-  - Commands that modify tracked files outside Allowed paths
-  - Migrations, codegen that writes tracked files, or any destructive ops
+  - Mid-severity commands (e.g. `mkdir`, `touch`, `sed`, `find`, `xargs`, `cp`, `mv`).
+  - Git operations that modify repo local state (e.g. `git add`, `git reset`, `git checkout`).
+  - Dependency graph mutations (`bun install`, `bun add/remove/upgrade`, lockfile changes).
+  - Commands that modify tracked files outside Allowed paths.
+  - Migrations, codegen that writes tracked files, or any destructive ops.
+  - Any script/command that writes many files (asset export, snapshot updates, bulk codemods), unless explicitly requested in this conversation.
 
 - Never allowed commands:
-  - Git operations that modify repo remote state (e.g. `git commit`, `git push`, `git merge`, `git rebase`)
-  - Unsafe and danger commands (e.g. `sudo`, `sudo su`, `sudo rm -rf /`)
-  - Unverified binary or shell executable
+  - Git operations that modify repo remote state (e.g. `git commit`, `git push`, `git merge`, `git rebase`).
+  - Unsafe and danger commands (e.g. `sudo`, `sudo su`, `sudo rm -rf /`).
+  - Unverified binary or shell executable.
+  - OS controllable commands (e.g. `poweroff`, `reboot`).
 
 ## Security Guardrails
 
 - Do not read `.env*` files as an agent.
 - When running **Bun** commands as an agent, default to `--no-env-file` to prevent automatic `.env` loading.
   - Only allow env-file loading when the task explicitly requires it and approval is granted.
+  - If a script truly requires env, that’s approval-gated and must be explicitly stated in the task card.
+  - `dev`, `build`, `test` scripts may require env variables depending on project. If they fail under `--no-env-file`, stop and ask for the required env keys/values (do not read `.env*`).
+  - If the project requires env for `dev`, `build` or `test` script, rerun without `--no-env-file` only with explicit approval and document why in PROOF.
 - `bun install`, `bun add/remove/upgrade`, and any dependency graph mutation require explicit approval.
 - If you must allow install in an agent workflow, use `bun install --frozen-lockfile --ignore-scripts`.
 - Never modify VS Code settings, AI settings, allowlists, denylists, or any files under `.vscode` or `~/.config`.
@@ -57,8 +102,9 @@ Approval must be explicit in the conversation. If an action is listed as "Needs 
 - Pipes (`|`) are allowed only for read-only inspection (e.g. `git diff | head -n 50`).
 - **No redirects/heredocs** in terminal commands when running as an agent; use file tools for writes.
 - Run commands separately for deterministic logs.
-- Do not use find with `-exec`/`-execdir`/`-ok`/`-delete`.
+- Do not use `find` with `-exec`/`-execdir`/`-ok`/`-delete`.
 - If a task requires anything outside these rules, stop and ask the user for explicit confirmation.
+- Any tool that can transmit repo/code/content externally (MCP servers/connectors) is approval-gated; never send secrets or raw sensitive files.
 
 ## Operating principles
 
@@ -107,6 +153,8 @@ Sometimes (only if needed):
 
 #### Fast loop (pre-PR)
 
+This plan runs during exploratory iteration before a finalization/PR cleanup pass.
+
 ```yaml
 PLAN:
   approach: "<primary strategy>"
@@ -119,12 +167,14 @@ PLAN:
     # Requires approval if deps are not already installed / cache not present:
     - bun install --frozen-lockfile --ignore-scripts
     - bun run --no-env-file check-types
-    - bun run --no-env-file lint # Targeted tests only
+    - bun run --no-env-file lint
     - bun run --no-env-file test
 ```
 
 #### Full loop (DoD)
 
+This plan runs when user asks for finalize or cleanup codebase for PR.
+
 ```yaml
 PLAN:
   approach: "<primary strategy>"
@@ -137,7 +187,7 @@ PLAN:
     # Requires approval if deps are not already installed / cache not present:
     - bun install --frozen-lockfile --ignore-scripts
     - bun run --no-env-file check-types
-    - bun run --no-env-file lint # Full test suite
+    - bun run --no-env-file lint
     - bun run --no-env-file test
     - bun run --no-env-file build
 ```
@@ -166,8 +216,8 @@ Rules: prefer small diffs; dry runs first when available; safeguard destructive 
 ```yaml
 PROOF:
   commands:
-    - "bun run test"   → exit 0
-    - "bun run build"  → exit 0
+    - "bun run --no-env-file test"   → exit 0
+    - "bun run --no-env-file build"  → exit 0
   outputs:
     - "All tests passed"
     - "Build completed"
@@ -180,7 +230,7 @@ PROOF:
 - Default recommendation: Bun’s built-in test runner (`bun test` and imports from `bun:test`) for speed and fewer dependencies.
 - Project override: if `PROJECT.md` specifies Vitest (or another runner), follow it:
   - use that runner’s import APIs in tests
-  - ensure `bun run test` (package.json) executes the configured runner
+  - ensure `bun run --no-env-file test` (package.json) executes the configured runner
 
 ## Core commands
 
@@ -202,14 +252,14 @@ Default to Bun instead of Node.js.
 
 - Initial deps installation (requires approval): `bun install --frozen-lockfile --ignore-scripts`
 - Install new deps (requires approval): `bun install`
-- Type check: `bun run check-types`
-- Lint & format: `bun run lint` (auto-fix: add `--write`)
-- Unit/integration tests: `bun run test`
-- Benchmark: `bun run bench`
-- Dev server: `bun run dev`
-- Build: `bun run build`
-- Preview: `bun run preview`
-- Run file: `bun <file>`
+- Type check: `bun run --no-env-file check-types`
+- Lint & format: `bun run --no-env-file lint` (auto-fix: add `--write`)
+- Unit/integration tests: `bun run --no-env-file test`
+- Benchmark: `bun run --no-env-file bench`
+- Dev server: `bun run --no-env-file dev`
+- Build: `bun run --no-env-file build`
+- Preview: `bun run --no-env-file preview`
+- Run file: `bun --no-env-file <file>`
 
 Also follow below requirements:
 
@@ -251,9 +301,14 @@ When scripts are missing and you cannot add them
 
 Defaults; Projects may override in `PROJECT.md`.
 
+Rules:
+
+- Never create, modify, delete files outside of local workspace folder
+
 - Allowed:
   - `src/`
   - `tests/`
+  - `dist/` (dist may be produced locally; editing/committing dist is never allowed)
   - `DRAFTS/`
   - `tailwind.config.js`
   - `vite.config.js`
@@ -269,8 +324,10 @@ Defaults; Projects may override in `PROJECT.md`.
   - `.roo/`
   - `.kilocode/`
   - `.zed/`
-  - `dist/`
+  - `.vscode/`
   - `scripts/` (unless `PROJECT.md` explicitly allows)
+  - `.git/`
+  - Outside of local workspace folder
 
 ## Coding standards
 
@@ -301,7 +358,7 @@ Defaults; Projects may override in `PROJECT.md`.
 
 Defaults; Projects may override in `PROJECT.md`.
 
-- Unit/integration (`bun run test`)
+- Unit/integration (`bun run --no-env-file test`)
   - If using bun:test: `import { describe, it, expect } from 'bun:test'`
   - If using Vitest (project-defined): `import { describe, it, expect } from 'vitest'`
 

@@ -24,7 +24,9 @@ Refer to `AGENTS.md` for safety protocol
 
 ## Directory layout
 
-The tree below is illustrative; the authoritative rule is module responsibility boundaries.
+- The tree below is illustrative.
+- The authoritative rule is module responsibility boundaries.
+- Agents must treat non-Allowed paths as non-editable and must not read sensitive locations (see AGENTS).
 
 ```tree
 .
@@ -60,6 +62,7 @@ The tree below is illustrative; the authoritative rule is module responsibility 
 ├── src                                # Main source directory
 │   ├── api                            # Re-usable React Hooks using API calls defined in `Queries` section
 │   │   ├── stats.ts                   # React hook for `/api/stats` route (GET, GET/:id, POST, PUT, etc.)
+│   │   ├── fetch-api.ts               # Example API fetcher utility
 │   │   └── index.ts                   # Barrel export for API hooks
 │   ├── assets                         # Static assets directory
 │   │   ├── images                     # Project image assets (logos, banners, illustrations, etc.)
@@ -96,7 +99,6 @@ The tree below is illustrative; the authoritative rule is module responsibility 
 │   │   └── index.d.ts                 # Shared app-level types
 │   └── utils                          # Utils directory
 │       ├── logger.ts                  # Example logger utility
-│       ├── fetcher.ts                 # Example API fetcher utility
 │       └── index.ts                   # Barrel export for utils
 ├── types                              # Global ambient type declarations (not bundled in src)
 │   ├── env.d.ts                       # Type declarations for environment variables (ignored by .gitignore)
@@ -123,7 +125,12 @@ Project `package.json` MUST expose scripts:
 
 Default to Bun instead of Node.js.
 
-- UI E2E/visual: `bun run e2e-test`
+- UI E2E/visual: `bun run --no-env-file e2e-test`
+
+## Security Guardrails
+
+- Follow `AGENTS.md` for all environment/secrets rules (including `--no-env-file`, approval gating, and “never read .env\*”).
+- This file only adds architecture-specific command expectations (e.g., `e2e-test`) and architectural boundaries.
 
 ### Naming & placement
 
@@ -133,8 +140,16 @@ Default to Bun instead of Node.js.
 ## Primitives & policies
 
 - [Local UI](#dependency-overview) state in components (`useState`/`useReducer`).
-- All network I/O in `src/api/**` via a centralized `src/utils/fetcher.ts`.
+- All network I/O in `src/api/**` via a centralized `src/api/fetch-api.ts`.
 - No [UI Library](#dependency-overview) or I/O inside `src/utils/**` and `src/helpers/**`.
+
+## Enforcement (recommended)
+
+- Import boundaries:
+  - Only `src/api/**` may import and call `src/api/fetch-api.ts`.
+  - `src/components/**` and `src/pages/**` must not call fetcher directly.
+  - `src/utils/**` and `src/helpers/**` must not import React and must not perform network I/O.
+- Prefer adding lint rules (Biome or equivalent) to enforce boundaries and prevent regressions.
 
 ## Module responsibilities
 
@@ -176,9 +191,17 @@ Use imports like `import { foo } from "@/utils/foo"` to avoid brittle relative p
 - Components must reference [Utility styling](#dependency-overview) theme/classes; avoid raw design values.
 - Global styles limited to resets and [Utility styling](#dependency-overview) layers.
 
+### Token policy (required)
+
+- Design tokens live in `tailwind.config.js` (theme: colors, typography, spacing, radii, shadows).
+- Components must use Tailwind classes bound to tokens; avoid raw hex values and one-off pixel values.
+- If a one-off value is unavoidable:
+  - Document it with rationale (and follow-up plan) in `DRAFTS/TODO.md`
+  - Prefer adding a token instead when the value repeats or is part of the design system.
+
 ## Error handling & logging
 
-- API errors normalized in `fetcher.ts`; hooks return `{ data, error, isLoading }`.
+- API errors normalized in `fetch-api.ts`; hooks return `{ data, error, isLoading }`.
 - UI: friendly error states; detailed logs only in dev.
 
 ## Performance & a11y budgets (advisory)
@@ -191,7 +214,7 @@ Use imports like `import { foo } from "@/utils/foo"` to avoid brittle relative p
 
 Follow `PROJECT.md` for the chosen [unit test runner](#dependency-overview).
 
-Just run `bun run test` script to ensure all tests are pass.
+Just run `bun run --no-env-file test` script to ensure all tests are pass.
 
 [E2E & visuals](#dependency-overview):
 
@@ -199,6 +222,7 @@ Just run `bun run test` script to ensure all tests are pass.
 - Stabilize screenshots: prefer config-level defaults (`expect.toHaveScreenshot`), and use style injection to hide volatile elements when needed unless overridden in `PROJECT.md`
 - Update snapshots only for intentional visual changes and include diffs in proof
 - Snapshots in `tests/e2e/__screenshots__/`
+- Run `e2e-test` when UI changes or before PR finalization.
 
 ## CI & gates
 
